@@ -16,15 +16,21 @@ public class Main extends Thread
 {
         protected Socket clientSocket;
         public static ArrayList<serverFile> clientfiles;  //list of client files and the host who have them
+        public static int numClients;
+        public static ArrayList<serverLoads> servers;
 
         public static void main(String[] args) throws IOException
         {
-
+            numClients = 0;
+            serverLoadBalancer SLB = new serverLoadBalancer();
+            SLB.start();
             ServerSocket serverSocket = null;
             BCthread clientConnector = new BCthread(); //spawn the client broadcast authenticator thread
             serverFileQuery sFQ = new serverFileQuery(); //spawn the thread that responds to file queries
             sFQ.start();
             clientConnector.start();
+
+
             clientfiles = new ArrayList<serverFile>(); //start as a new list
             try
             {
