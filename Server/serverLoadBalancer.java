@@ -10,8 +10,6 @@ public class serverLoadBalancer extends Thread
     {
 
         Main.servers = new ArrayList<serverLoads>();
-        slResponder SLR = new slResponder();
-        SLR.start();
 
         while(true)
         {
@@ -21,7 +19,7 @@ public class serverLoadBalancer extends Thread
                 clientN.setBroadcast(true);                    //enable broadcasting
 
                 try { //send to the highest order broadcast address
-                    DatagramPacket sendPacket = new DatagramPacket(senddata, senddata.length, InetAddress.getByName("255.255.255.255"), 6789);
+                    DatagramPacket sendPacket = new DatagramPacket(senddata, senddata.length, InetAddress.getByName("255.255.255.255"), 6785);
                     clientN.send(sendPacket);
                 }
                 catch (Exception excep) //this should never fail
@@ -40,7 +38,7 @@ public class serverLoadBalancer extends Thread
                         if (broadcast == null) //if broadcast isnt allowed
                             continue;          //skip it
                         try {
-                            DatagramPacket sendPacket = new DatagramPacket(senddata, senddata.length, broadcast, 6789);
+                            DatagramPacket sendPacket = new DatagramPacket(senddata, senddata.length, broadcast, 6785);
                             clientN.send(sendPacket);   //send the packet to the broadcast on all valid interfaces
 
                         } catch (Exception excep)
@@ -58,12 +56,15 @@ public class serverLoadBalancer extends Thread
                 serverLoads tempSL = new serverLoads();
                 if(temp.substring(0, 3).equals("%%%"))//if its a server responding
                 {
-                   tempSL.ipAddress=receivePacket.getAddress().getHostAddress();
-                   tempSL.numClients = Integer.parseInt(temp.substring(3,temp.length()));
+                   String[] parts = temp.substring(3,temp.length()).split(":");
+                   tempSL.idNum = Integer.parseInt(parts[0]);
+                   tempSL.numClients = Integer.parseInt(parts[1]);
+                   tempSL.serverIP = receivePacket.getAddress().getHostAddress();
+
                    boolean found = false;
                    for(int i =0; i< Main.servers.size(); ++i)
                    {
-                       if(Main.servers.get(i).ipAddress==tempSL.ipAddress)
+                       if(Main.servers.get(i).idNum==tempSL.idNum)
                        {
                            Main.servers.get(i).numClients = tempSL.numClients;
                            found = true;
@@ -77,71 +78,14 @@ public class serverLoadBalancer extends Thread
             }
             catch (Exception excep)
             {
-                System.out.println("failed on something major");
+                System.out.println("failed on something major : "+excep);
             }
         }
     }
 
-    class slResponder extends Thread
-    {
 
-            @Override
-            public void run()
-            {
-                try
-                {
-                    socket = new DatagramSocket(6789); //listen on a specific port
-                    socket.setBroadcast(true);         //we want to listen to broadcasts
-                    String myaddy;             //Originally was going to send an IP, but decided to use 3 chars just
-                    while (true)                       // so the client could authenticate the type of message it recieved.
-                    {   //forever
-                        myaddy = "%%%"+Main.numClients;
-                        byte[] recBuffer = new byte[15000];       //buffer for received information
-                        DatagramPacket packet = new DatagramPacket(recBuffer,recBuffer.length); //packet for received information
-                        socket.receive(packet); //receive the broadcast message
-                        String message = new String(packet.getData()).trim();//trim any extra chars off the end \n etc
-                        if(checkInetAddress(packet.getAddress()))
-                        {
-                            System.out.println("gecko");
-                            if(message.equals("@@@")) //if the message is a valid signal from a client
-                            {
-                                byte[] sendData = myaddy.getBytes(); // make a packet that is the correct response of %%%
-                                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,packet.getAddress(),packet.getPort());
-                                socket.send(sendPacket); //send response to client
-                            }
-                        }
-                        else
-                            System.out.println("echo");
-                    }
-                }
-                catch(IOException except) //rare occurance of problems output them to console
-                {
-                    System.out.println("Something went wrong: "+except);
-                }
-            }
-
-        public boolean checkInetAddress (InetAddress addr)
-        {
-            try
-            {
-                Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-                while (interfaces.hasMoreElements()) //for all network interfaces
-                {
-                    NetworkInterface tmp = (NetworkInterface) interfaces.nextElement();
-                    if (tmp.isLoopback() || !tmp.isUp())//if its a 127.0.0.1 (local address) or not connected
-                        continue;                                                 //skip it
-                    for (Enumeration addresses = tmp.getInetAddresses(); addresses.hasMoreElements (); )
-                    {
-                        if (addr.equals ((InetAddress) addresses.nextElement ()))
-                            return false;
-                    }
-                }
-            }catch(Exception e){}
-            return true;
-        }
-
-    }
 
 }
+
 
 

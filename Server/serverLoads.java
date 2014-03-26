@@ -5,6 +5,7 @@ import java.util.ArrayList;
  */
 public class serverLoads
 {
-    String ipAddress;
+    int idNum;
     int numClients;
+    String serverIP;
 }

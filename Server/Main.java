@@ -11,16 +11,22 @@
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
-          
+import java.util.Random;
+
+//add the update with lists from all servers!!
+
 public class Main extends Thread
 {
         protected Socket clientSocket;
         public static ArrayList<serverFile> clientfiles;  //list of client files and the host who have them
         public static int numClients;
+        public static int serverID;
         public static ArrayList<serverLoads> servers;
 
         public static void main(String[] args) throws IOException
         {
+            Random rand = new Random();
+            serverID = rand.nextInt(5000);
             numClients = 0;
             serverLoadBalancer SLB = new serverLoadBalancer();
             SLB.start();
