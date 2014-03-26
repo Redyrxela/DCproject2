@@ -13,7 +13,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-//add the update with lists from all servers!!
+
 
 public class Main extends Thread
 {
@@ -158,6 +158,28 @@ public class Main extends Thread
                     temp = clientfiles.get(i).fName+"\n";
                     System.out.println("Sending : "+temp);
                     Ostream.write(temp.getBytes()); //tell the client the list we have on record
+                }
+                for(int i=0;i<servers.size();++i) //get the list from another server
+                {
+                    if(serverID!=servers.get(i).idNum)//if its not me
+                    {
+                        Socket otherServers = new Socket(servers.get(i).serverIP,6666);
+                        BufferedReader inpstream = new BufferedReader( new InputStreamReader(otherServers.getInputStream()));
+                        OutputStream   oupstream =  otherServers.getOutputStream();
+                        temp = "EOF\n";
+                        oupstream.write(temp.getBytes()); //trigger the server to send us its list back
+                        while(true)
+                        {
+                            temp = inpstream.readLine(); //read each recieved line
+                            if (temp.equals("EOF")) //if its the end from the server break the while loop
+                                break;
+                            Ostream.write(temp.getBytes());//forward it on to the client!
+                        }
+                        Ostream.flush();     //close it!!
+                        Ostream.close();
+                        inpstream.close();
+                        otherServers.close();
+                    }
                 }
 
                 System.out.println("Finished sending out list to the client");
