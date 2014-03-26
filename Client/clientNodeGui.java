@@ -38,6 +38,7 @@ public class clientNodeGui {
     private JButton Update;
     public JList outputWindow;        //the list of local files on gui
     private JProgressBar RBar;
+    public JLabel serverGuiIP;
 
 
     public static String dirName;     //static reference to the directory chosen on gui
@@ -74,6 +75,8 @@ public class clientNodeGui {
                 }
                 try
                 {
+                    if(serverAddy!=null)
+                        serverGuiIP.setText(serverAddy+":6666");
                     clientSend = false;   //the file host should stop sending
                     getFileList();        //we should get the list of files now
 
@@ -120,7 +123,7 @@ public class clientNodeGui {
         files = new ArrayList<String>(); //init local and remote file listings
         myFiles = new ArrayList<String>();
         clientSenderExists = false;
-        JFrame frame = new JFrame("clientNodeGui");             //start teh gui
+        JFrame frame = new JFrame("clientNodeGui");             //start the gui
         frame.setContentPane(new clientNodeGui().mainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();

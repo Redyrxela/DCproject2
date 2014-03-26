@@ -61,7 +61,7 @@ public class clientbackend extends Thread
 
         String temp = new String(receivePacket.getData()).trim(); //trim extra chars like \n
 
-        if (temp.equals("%%%"))   //if its a valid response from the server
+        if(temp.substring(0, 3).equals("%%%"))//if its a response from a server.
         {
             clientNodeGui.serverAddy = receivePacket.getAddress().getHostAddress(); //get the servers address from the packet
             System.out.println("Found server at "+clientNodeGui.serverAddy+":6666"); //server uses fixed port. debug output

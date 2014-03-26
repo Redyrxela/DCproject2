@@ -19,6 +19,7 @@ public class clientSenderHandler extends Thread
     clientSender fileserver;
     public void run()
     {
+       clientNodeGui.clientSenderExists = true;
        try
        {
          fs = new ServerSocket(clientNodeGui.port); // when we start grab the port from the gui and listen on it
