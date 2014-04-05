@@ -1,13 +1,8 @@
-// CS6263 Project2 Spring 2014
-// Alex Ryder
-// This program is a simple peer to peer file sharing program with a server to lookup files
-//
+
 // This class is the main server class that controls all server functions. it keeps track of
 // which clients have which files.
 
-/**
- * Created by Alex Ryder on 3/14/14.
- */
+
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
@@ -28,14 +23,14 @@ public class Main extends Thread
             Random rand = new Random();
             serverID = rand.nextInt(5000);
             numClients = 0;
-            serverLoadBalancer SLB = new serverLoadBalancer();
-            SLB.start();
             ServerSocket serverSocket = null;
             BCthread clientConnector = new BCthread(); //spawn the client broadcast authenticator thread
             serverFileQuery sFQ = new serverFileQuery(); //spawn the thread that responds to file queries
             sFQ.start();
             clientConnector.start();
 
+            serverLoadBalancer SLB = new serverLoadBalancer();
+            SLB.start();
 
             clientfiles = new ArrayList<serverFile>(); //start as a new list
             try

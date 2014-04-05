@@ -11,9 +11,7 @@ public class serverLoadBalancer extends Thread
 
         Main.servers = new ArrayList<serverLoads>();
 
-        while(true)
-        {
-            try {
+          try {
                 byte[] senddata = "@@@".getBytes();            //prepare valid client data for sending to server
                 DatagramSocket clientN = new DatagramSocket(); //create a new socket
                 clientN.setBroadcast(true);                    //enable broadcasting
@@ -80,7 +78,7 @@ public class serverLoadBalancer extends Thread
             {
                 System.out.println("failed on something major : "+excep);
             }
-        }
+
     }
 
 

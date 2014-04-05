@@ -1,8 +1,7 @@
+//this is for keeping track of other running servers by their id, their IP and how many clients they have
+
 import java.util.ArrayList;
 
-/**
- * Created by redyrxela on 3/25/14.
- */
 public class serverLoads
 {
     int idNum;

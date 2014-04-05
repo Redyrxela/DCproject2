@@ -1,7 +1,3 @@
-// CS6263 Project2 Spring 2014
-// Alex Ryder
-// This program is a simple peer to peer file sharing program with a server to lookup files
-//
 // This class is spawned in the Main class, it is a background thread that listens on a UDP
 // port for a broadcast message. when the broadcast is seen it will send a message directly
 // to the sender of the broadcast. this allows the client to find the server without knowing
@@ -74,6 +70,10 @@ public class BCthread extends Thread
                                 socket.send(sendPacket); //send response to client
                                 System.out.println("Responded with "+myaddy);
                                 Main.numClients++;
+
+                                serverLoadBalancer SLB = new serverLoadBalancer();//now update the number of clients we have.
+                                SLB.start();
+
                             }
                         }
                     }
@@ -85,8 +85,8 @@ public class BCthread extends Thread
                         myaddy = "%%%"+Main.serverID+":"+Main.numClients;
                         byte[] sendData = myaddy.getBytes(); // make a packet that is the correct response of %%%
                         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,packet.getAddress(),packet.getPort());
-                        socket.send(sendPacket); //send response to client
-                       // System.out.println("Responded with "+myaddy);
+                        socket.send(sendPacket);
+
                     }
                     else
                         System.out.println("not sure what happened there we recieved :"+message);
