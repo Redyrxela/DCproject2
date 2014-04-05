@@ -1,334 +1,337 @@
-// CS6263 Project2 Spring 2014
-// Alex Ryder
-// This program is a simple peer to peer file sharing program with a server to lookup files
-//
-// This class creates a GUI on the client nodes. clint picks a directory and port number and
-// then clicks update to update the server of the files it currently has. it will self
-// authenticate with the server, and retrieve a list of files we dont have. a user may then
-// select one of these files and click retrieve. the gui will be pauses and the file will
-// be retrieved from whatever client is hosting that file.
-
-
-import com.sun.javafx.property.adapter.PropertyDescriptor;
-
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.table.AbstractTableModel;
+import com.intellij.uiDesigner.core.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.*;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Enumeration;
+import javax.swing.*;
+import javax.swing.text.JTextComponent;
 
-/**
- * Created by redyrxela on 3/14/14.
- */
-public class clientNodeGui {
-    private JTextField portInput; //port input on gui
-    public JList fileList;        //list of remote files on gui
-    private JButton retrieveButton;
-    private JPanel mainPanel;
-    private JTextField directoryName; //the name of the directory to look in (field on gui)
-    private JLabel Directory;
-    private JButton Update;
-    public JList outputWindow;        //the list of local files on gui
-    private JProgressBar RBar;
-    public JLabel serverGuiIP;
+public class clientNodeGui
+{
+    class clientReciever
+        implements Runnable
+    {
 
-
-    public static String dirName;     //static reference to the directory chosen on gui
-    public static int port;           //static reference to the port chosen on gui
-
-    public static ArrayList<String> files;   //remote files (Static)
-    public static ArrayList<String> myFiles;  //local files (static)
-
-        public static String serverAddy; //the ipaddress of the server
-
-    public static boolean clientSend; //when we want the file server portion of the gui running
-    public static boolean clientSenderExists;
-    DefaultListModel<String> listModel = new DefaultListModel<String>(); // for adapting arraylists to jlists
-    DefaultListModel<String> myListModel = new DefaultListModel<String>();
-
-
-    private void createUIComponents() {
-        outputWindow = new JList(myListModel);   //link jlist to list models
-        fileList = new JList(listModel);
-        // TODO: place custom component creation code here
-    }
-
-    public clientNodeGui() {
-        $$$setupUI$$$();
-        //when the update button is pushed
-        Update.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e)
+        public void run()
+        {
+            fileList.setEnabled(false);
+            System.out.println((new StringBuilder()).append("Requesting ").append(fileList.getSelectedValue().toString()).append(" from the server").toString());
+            String hostIP = "";
+            int hostPort = 8888;
+            try
             {
-                if(!clientSenderExists)
-                {
-                    clientSenderHandler CSH = new clientSenderHandler(); //start a file server
-                    CSH.start();
-                }
+                byte senddata[] = fileList.getSelectedValue().toString().getBytes();
+                DatagramSocket clientN = new DatagramSocket();
+                clientN.setSoTimeout(10000);
                 try
                 {
-                    if(serverAddy!=null)
-                        serverGuiIP.setText(serverAddy+":6666");
-                    clientSend = false;   //the file host should stop sending
-                    getFileList();        //we should get the list of files now
-
-                } catch (Exception excep) {
-                    System.out.println("we failed to get file list :" + excep);
+                    DatagramPacket sendPacket = new DatagramPacket(senddata, senddata.length, InetAddress.getByName(clientNodeGui.serverAddy), 6666);
+                    clientN.send(sendPacket);
+                    System.out.println("Requested file");
                 }
-            }
-        });
-        //when the retrieve button is pushed
-        retrieveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    if (!fileList.isSelectionEmpty()) //if they have something selected
-                        getFileHandler();   //get the file!!
-                } catch (Exception excep) {
-                    System.out.println("failed to retrieve file :" + excep);
-                }
-            }
-        });
-
-        directoryName.addFocusListener(new FocusListener() {
-            @Override
-            public void focusLost(FocusEvent arg0) {
-
-                if (directoryName.getText().charAt(directoryName.getText().length() - 1) != '/') //if the end of the string is not a /
-
+                catch(Exception excep)
                 {
-                    directoryName.setText(directoryName.getText() + "/"); //add the / to the end will error out without it
+                    System.out.println("Error in file request");
                 }
-
+                byte recBuffer[] = new byte[15000];
+                DatagramPacket receivePacket = new DatagramPacket(recBuffer, recBuffer.length);
+                clientN.receive(receivePacket);
+                String temp = (new String(receivePacket.getData())).trim();
+                String parts[] = temp.split(":");
+                hostIP = parts[0];
+                hostPort = Integer.parseInt(parts[1]);
+                System.out.println((new StringBuilder()).append("File is hosted at ").append(hostIP).append(":").append(hostPort).toString());
+                clientN.close();
             }
-
-            public void focusGained(FocusEvent arg0) {
+            catch(Exception excep)
+            {
+                System.out.println("failed on something major");
             }
-        });
+            try
+            {
+                Socket socket = new Socket(InetAddress.getByName(hostIP), hostPort);
+                System.out.println((new StringBuilder()).append("We connected to ").append(socket.getInetAddress().getHostName()).append(":").append(socket.getPort()).toString());
+                OutputStream outstreams = socket.getOutputStream();
+                String fileWanted = (new StringBuilder()).append(fileList.getSelectedValue().toString()).append("\n").toString();
+                outstreams.write(fileWanted.getBytes());
+                System.out.println((new StringBuilder()).append("we asked the host for ").append(fileList.getSelectedValue().toString()).toString());
+                byte buffer[] = new byte[1024];
+                DataInputStream inData = new DataInputStream(socket.getInputStream());
+                RBar.setStringPainted(true);
+                long fileSize = inData.readLong();
+                RBar.setMaximum((int)fileSize);
+                File myFile = new File((new StringBuilder()).append(directoryName.getText()).append(fileList.getSelectedValue().toString()).toString());
+                FileOutputStream fos = new FileOutputStream(myFile);
+                int count;
+                while((count = inData.read(buffer)) > 0) 
+                {
+                    fos.write(buffer, 0, count);
+                    RBar.setValue(RBar.getValue() + count);
+                }
+                System.out.println("we actually got here!");
+                fos.close();
+                outstreams.close();
+                inData.close();
+                socket.close();
+            }
+            catch(Exception excep)
+            {
+                System.out.println((new StringBuilder()).append("file recieving error : ").append(excep).toString());
+            }
+            getFileList();
+            RBar.setValue(0);
+            RBar.setStringPainted(false);
+            fileList.setEnabled(true);
+            Update.setEnabled(true);
+            retrieveButton.setEnabled(true);
+        }
 
+        final clientNodeGui this$0;
+
+        clientReciever()
+        {
+            this$0 = clientNodeGui.this;
+            super();
+        }
     }
 
 
-    public static void main(String[] args) {
-        port = 8888; //default port
-        clientSend = true; //client is ok to start a file server
-        files = new ArrayList<String>(); //init local and remote file listings
-        myFiles = new ArrayList<String>();
+    private void createUIComponents()
+    {
+        outputWindow = new JList(myListModel);
+        fileList = new JList(listModel);
+    }
+
+    public clientNodeGui()
+    {
+        listModel = new DefaultListModel();
+        myListModel = new DefaultListModel();
+        $$$setupUI$$$();
+        Update.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e)
+            {
+                Update.setEnabled(false);
+                retrieveButton.setEnabled(false);
+                try
+                {
+                    if(clientNodeGui.serverAddy != null)
+                        serverGuiIP.setText((new StringBuilder()).append(clientNodeGui.serverAddy).append(":6666").toString());
+                    clientNodeGui.clientSend = false;
+                    getFileList();
+                }
+                catch(Exception excep)
+                {
+                    System.out.println((new StringBuilder()).append("we failed to get file list :").append(excep).toString());
+                }
+            }
+
+            final clientNodeGui this$0;
+
+            
+            {
+                this$0 = clientNodeGui.this;
+                super();
+            }
+        });
+        retrieveButton.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
+                    Update.setEnabled(false);
+                    retrieveButton.setEnabled(false);
+                    if(!fileList.isSelectionEmpty())
+                        getFileHandler();
+                }
+                catch(Exception excep)
+                {
+                    System.out.println((new StringBuilder()).append("failed to retrieve file :").append(excep).toString());
+                }
+            }
+
+            final clientNodeGui this$0;
+
+            
+            {
+                this$0 = clientNodeGui.this;
+                super();
+            }
+        });
+        directoryName.addFocusListener(new FocusListener() {
+
+            public void focusLost(FocusEvent arg0)
+            {
+                if(directoryName.getText().charAt(directoryName.getText().length() - 1) != '/')
+                    directoryName.setText((new StringBuilder()).append(directoryName.getText()).append("/").toString());
+            }
+
+            public void focusGained(FocusEvent focusevent)
+            {
+            }
+
+            final clientNodeGui this$0;
+
+            
+            {
+                this$0 = clientNodeGui.this;
+                super();
+            }
+        });
+    }
+
+    public static void main(String args[])
+    {
+        port = 8888;
+        clientSend = true;
+        files = new ArrayList();
+        myFiles = new ArrayList();
         clientSenderExists = false;
-        JFrame frame = new JFrame("clientNodeGui");             //start the gui
-        frame.setContentPane(new clientNodeGui().mainPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JFrame frame = new JFrame("clientNodeGui");
+        frame.setContentPane((new clientNodeGui()).mainPanel);
+        frame.setDefaultCloseOperation(3);
         frame.pack();
         frame.setVisible(true);
         System.out.println("booting gui");
-
-        clientbackend BEnd = new clientbackend(); //authenticate and register with server
+        clientbackend BEnd = new clientbackend();
         BEnd.start();
-
+        clientSenderHandler CSH = new clientSenderHandler();
+        CSH.start();
     }
 
-    void getFileList() {
-        fileList.setEnabled(false); //lock the file list
-        port = Integer.parseInt(portInput.getText()); //get the current port number
-        dirName = directoryName.getText();            //get the current directory
-        clientUpdaterThread CU = new clientUpdaterThread();  //run the update thread
+    void getFileList()
+    {
+        fileList.setEnabled(false);
+        port = Integer.parseInt(portInput.getText());
+        dirName = directoryName.getText();
+        clientUpdaterThread CU = new clientUpdaterThread();
         CU.start();
         try
         {
             CU.join();
         }
-        catch (Exception e)
+        catch(Exception e)
         {
-            System.out.println("Error waiting on the client updater : "+e);
+            System.out.println((new StringBuilder()).append("Error waiting on the client updater : ").append(e).toString());
         }
-
-        fileList.clearSelection(); //they dont have anything selected any more
-
-        listModel.removeAllElements(); //get rid of all gui listings
+        fileList.clearSelection();
+        listModel.removeAllElements();
         myListModel.removeAllElements();
-
-
-        for (int i = 0; i < files.size(); i++) { //get the new listing
-            if (!myFiles.contains(files.get(i))) //if i dont have this file then display it
+        for(int i = 0; i < files.size(); i++)
+            if(!myFiles.contains(files.get(i)))
                 listModel.addElement(files.get(i));
 
-        }
-
-        for (int i = 0; i < myFiles.size(); i++) //list files i do have
+        for(int i = 0; i < myFiles.size(); i++)
             myListModel.addElement(myFiles.get(i));
 
-        clientSend = true;      //we are good to run the file server again
-        fileList.setEnabled(true);  //we can unlock the file list
+        clientSend = true;
+        fileList.setEnabled(true);
+        Update.setEnabled(true);
+        retrieveButton.setEnabled(true);
     }
 
-    void getFileHandler() {
-        fileList.setEnabled(false); //(lock the file list) whole gui is locked anyway
-        System.out.println("Requesting " + fileList.getSelectedValue().toString() + " from the server");
-
+    void getFileHandler()
+    {
+        fileList.setEnabled(false);
+        System.out.println((new StringBuilder()).append("Requesting ").append(fileList.getSelectedValue().toString()).append(" from the server").toString());
         Thread getter = new Thread(new clientReciever());
         getter.start();
-
     }
 
-    class clientReciever implements Runnable
+    private void $$$setupUI$$$()
     {
-        public void run()
-        {
-            fileList.setEnabled(false); //(lock the file list) whole gui is locked anyway
-            System.out.println("Requesting " + fileList.getSelectedValue().toString() + " from the server");
-
-            String hostIP = ""; //we use defaults until server gives us the correct info
-            int hostPort = 8888;
-
-            try {
-                byte[] senddata = fileList.getSelectedValue().toString().getBytes(); //get file name user wants
-                DatagramSocket clientN = new DatagramSocket();
-                clientN.setSoTimeout(10000);
-
-                try {                             //request the file from the server
-                    DatagramPacket sendPacket = new DatagramPacket(senddata, senddata.length, InetAddress.getByName(clientNodeGui.serverAddy), 6666);
-                    clientN.send(sendPacket);
-                    System.out.println("Requested file");
-                } catch (Exception excep) {
-                    System.out.println("Error in file request");
-                }
-
-                byte[] recBuffer = new byte[15000];
-
-                DatagramPacket receivePacket = new DatagramPacket(recBuffer, recBuffer.length);
-                clientN.receive(receivePacket); //get response from server
-
-                String temp = new String(receivePacket.getData()).trim();
-
-                //seperate the data recieved at the : (IP:port)
-
-                String[] parts = temp.split(":");
-                hostIP = parts[0];               //first half is a host IP address
-                hostPort = Integer.parseInt(parts[1]);  //second half is a host port
-
-                System.out.println("File is hosted at " + hostIP + ":" + hostPort);
-
-                clientN.close();  //close this connection
-            } catch (Exception excep) {
-                System.out.println("failed on something major");
-            }
-
-
-            try {
-                Socket socket = new Socket(InetAddress.getByName(hostIP), hostPort); //connect to the host we were told about
-
-                System.out.println("We connected to " + socket.getInetAddress().getHostName() + ":" + socket.getPort());
-
-                OutputStream outstreams = socket.getOutputStream();
-
-
-                String fileWanted = fileList.getSelectedValue().toString() + "\n";
-
-                //request the file from that host
-                outstreams.write(fileWanted.getBytes());
-
-                System.out.println("we asked the host for " + fileList.getSelectedValue().toString());
-
-                //for compatibility with binary files
-                byte[] buffer = new byte[1024];
-
-
-                DataInputStream inData = new DataInputStream(socket.getInputStream());
-
-                RBar.setStringPainted(true);
-
-                long fileSize=inData.readLong();
-                RBar.setMaximum((int)fileSize);
-
-                File myFile = new File(directoryName.getText() + fileList.getSelectedValue().toString());
-                FileOutputStream fos = new FileOutputStream(myFile);
-                int count;
-
-                while((count = inData.read(buffer))> 0)
-                {
-                    fos.write(buffer,0,count);
-                    RBar.setValue(RBar.getValue()+count);
-
-                }
-
-                System.out.println("we actually got here!");
-
-                //we are done close everything
-                fos.close();
-                outstreams.close();
-                inData.close();
-                socket.close();
-            } catch (Exception excep) {
-                System.out.println("file recieving error : " + excep);
-            }
-
-            getFileList();     //update the server and the gui to show we have the file!!
-            RBar.setValue(0);
-            RBar.setStringPainted(false);
-            fileList.setEnabled(true);
-        }
-
-    }
-
-
-    /**
-     * Method generated by IntelliJ IDEA GUI Designer
-     * >>> IMPORTANT!! <<<
-     * DO NOT edit this method OR call it in your code!
-     *
-     * @noinspection ALL
-     */
-    private void $$$setupUI$$$() {
         createUIComponents();
-        mainPanel = new JPanel();
-        mainPanel.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(5, 2, new Insets(0, 0, 0, 0), -1, -1));
-        final JLabel label1 = new JLabel();
-        label1.setText("PORT NUMBER");
-        mainPanel.add(label1, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        directoryName = new JTextField();
-        directoryName.setText("c:/");
-        mainPanel.add(directoryName, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        Directory = new JLabel();
-        Directory.setText("DIRECTORY");
-        mainPanel.add(Directory, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        portInput = new JTextField();
-        portInput.setText("8888");
-        mainPanel.add(portInput, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        Update = new JButton();
-        Update.setText("Update");
-        Update.setToolTipText("retrieve uptodate file list of files you dont have");
-        mainPanel.add(Update, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        retrieveButton = new JButton();
-        retrieveButton.setText("Retrieve");
-        mainPanel.add(retrieveButton, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label2 = new JLabel();
-        label2.setText("My Files");
-        mainPanel.add(label2, new com.intellij.uiDesigner.core.GridConstraints(4, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane1 = new JScrollPane();
-        mainPanel.add(scrollPane1, new com.intellij.uiDesigner.core.GridConstraints(3, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        scrollPane1.setViewportView(fileList);
-        final JLabel label3 = new JLabel();
-        label3.setText("Remote Files");
-        mainPanel.add(label3, new com.intellij.uiDesigner.core.GridConstraints(3, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane2 = new JScrollPane();
-        mainPanel.add(scrollPane2, new com.intellij.uiDesigner.core.GridConstraints(4, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        outputWindow.setEnabled(false);
-        scrollPane2.setViewportView(outputWindow);
+        JPanel jpanel = new JPanel();
+        mainPanel = jpanel;
+        jpanel.setLayout(new GridLayoutManager(8, 4, new Insets(0, 0, 0, 0), -1, -1, false, false));
+        jpanel.setName("");
+        JLabel jlabel = new JLabel();
+        jlabel.setText("PORT NUMBER");
+        jpanel.add(jlabel, new GridConstraints(2, 0, 1, 1, 8, 0, 0, 0, null, null, null));
+        JTextField jtextfield = new JTextField();
+        directoryName = jtextfield;
+        jtextfield.setText("c:/");
+        jpanel.add(jtextfield, new GridConstraints(1, 1, 1, 2, 8, 1, 6, 0, null, new Dimension(150, -1), null));
+        JLabel jlabel1 = new JLabel();
+        Directory = jlabel1;
+        jlabel1.setText("DIRECTORY");
+        jpanel.add(jlabel1, new GridConstraints(1, 0, 1, 1, 8, 0, 0, 0, null, null, null));
+        JTextField jtextfield1 = new JTextField();
+        portInput = jtextfield1;
+        jtextfield1.setText("8888");
+        jpanel.add(jtextfield1, new GridConstraints(2, 1, 1, 2, 8, 1, 6, 0, null, new Dimension(150, -1), null));
+        JButton jbutton = new JButton();
+        Update = jbutton;
+        jbutton.setToolTipText("retrieve uptodate file list of files you dont have");
+        jbutton.setText("Update");
+        jpanel.add(jbutton, new GridConstraints(3, 0, 1, 1, 0, 1, 3, 0, null, null, null));
+        JButton jbutton1 = new JButton();
+        retrieveButton = jbutton1;
+        jbutton1.setText("Retrieve");
+        jpanel.add(jbutton1, new GridConstraints(3, 1, 1, 2, 0, 1, 3, 0, null, null, null));
+        JLabel jlabel2 = new JLabel();
+        jlabel2.setText("My Files");
+        jpanel.add(jlabel2, new GridConstraints(5, 0, 1, 1, 8, 0, 0, 0, null, null, null));
+        JScrollPane jscrollpane = new JScrollPane();
+        jpanel.add(jscrollpane, new GridConstraints(4, 1, 1, 2, 0, 3, 7, 7, null, null, null));
+        JList jlist = fileList;
+        jscrollpane.setViewportView(jlist);
+        JLabel jlabel3 = new JLabel();
+        jlabel3.setText("Remote Files");
+        jpanel.add(jlabel3, new GridConstraints(4, 0, 1, 1, 8, 0, 0, 0, null, null, null));
+        JScrollPane jscrollpane1 = new JScrollPane();
+        jpanel.add(jscrollpane1, new GridConstraints(5, 1, 1, 2, 0, 3, 7, 7, null, null, null));
+        JList jlist1 = outputWindow;
+        jlist1.setEnabled(false);
+        jscrollpane1.setViewportView(jlist1);
+        JProgressBar jprogressbar = new JProgressBar();
+        RBar = jprogressbar;
+        jprogressbar.setStringPainted(false);
+        jprogressbar.setIndeterminate(false);
+        jpanel.add(jprogressbar, new GridConstraints(6, 1, 1, 2, 0, 1, 6, 0, null, null, null));
+        Spacer spacer = new Spacer();
+        jpanel.add(spacer, new GridConstraints(7, 1, 1, 2, 0, 2, 1, 6, null, null, null));
+        Spacer spacer1 = new Spacer();
+        jpanel.add(spacer1, new GridConstraints(2, 3, 1, 1, 0, 1, 6, 1, null, null, null));
+        Spacer spacer2 = new Spacer();
+        jpanel.add(spacer2, new GridConstraints(0, 2, 1, 1, 0, 2, 1, 6, null, null, null));
+        JLabel jlabel4 = new JLabel();
+        jlabel4.setText("Server :");
+        jpanel.add(jlabel4, new GridConstraints(0, 0, 1, 1, 8, 0, 0, 0, null, null, null));
+        JLabel jlabel5 = new JLabel();
+        serverGuiIP = jlabel5;
+        jlabel5.setText("");
+        jpanel.add(jlabel5, new GridConstraints(0, 1, 1, 1, 8, 0, 0, 0, null, null, null));
     }
 
-    /**
-     * @noinspection ALL
-     */
-    public JComponent $$$getRootComponent$$$() {
+    public JComponent $$$getRootComponent$$$()
+    {
         return mainPanel;
     }
-}
 
+    private JTextField portInput;
+    public JList fileList;
+    private JButton retrieveButton;
+    private JPanel mainPanel;
+    private JTextField directoryName;
+    private JLabel Directory;
+    private JButton Update;
+    public JList outputWindow;
+    private JProgressBar RBar;
+    public JLabel serverGuiIP;
+    public static String dirName;
+    public static int port;
+    public static ArrayList files;
+    public static ArrayList myFiles;
+    public static String serverAddy;
+    public static boolean clientSend;
+    public static boolean clientSenderExists;
+    DefaultListModel listModel;
+    DefaultListModel myListModel;
+
+
+
+
+}
