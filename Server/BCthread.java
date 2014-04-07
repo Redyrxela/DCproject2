@@ -17,6 +17,7 @@ public class BCthread extends Thread
     @Override
     public void run()
     {
+
         try
         {
             socket = new DatagramSocket(6785); //listen on a specific port
@@ -34,18 +35,13 @@ public class BCthread extends Thread
 
                 if(message.equals("$$$")) //if the message is a valid signal from a client
                 {
-                    int lowestClients =100000;
+                    int lowestClients =Main.numClients;
                     int lowestID = 1000000;
                     boolean same = false;
                     for(int i = 0; i<Main.servers.size();++i)
                     {    //for all servers
                         if(Main.servers.get(i).idNum!=Main.serverID) //if its not me
                         {
-                            if(Main.servers.get(i).numClients<lowestClients)
-                            {   //do i have the lowest clients
-                                lowestClients = Main.servers.get(i).numClients;
-                                same = false;
-                            }
                             if(Main.servers.get(i).numClients==lowestClients)
                             {
                                 same=true;
@@ -76,17 +72,43 @@ public class BCthread extends Thread
 
                             }
                         }
+                        else
+                        {
+                            myaddy = "%%%";
+                            byte[] sendData = myaddy.getBytes(); // make a packet that is the correct response of %%%
+                            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,packet.getAddress(),packet.getPort());
+                            socket.send(sendPacket); //send response to client
+                            System.out.println("Responded with "+myaddy);
+                            Main.numClients++;
+
+                            serverLoadBalancer SLB = new serverLoadBalancer();//now update the number of clients we have.
+                            SLB.start();
+
+                        }
+
                     }
                 }
                 else  //when we received other data in error
                 {
-                    if(message.equals("@@@"))
+                    if(message.substring(0, 3).equals("@@@"))
                     {
-                        myaddy = "%%%"+Main.serverID+":"+Main.numClients;
-                        byte[] sendData = myaddy.getBytes(); // make a packet that is the correct response of %%%
-                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,packet.getAddress(),packet.getPort());
-                        socket.send(sendPacket);
+                        serverLoads tempSL = new serverLoads();
+                        String[] parts = message.substring(3,message.length()).split(":");
+                        tempSL.idNum = Integer.parseInt(parts[0]);
+                        tempSL.numClients = Integer.parseInt(parts[1]);
+                        tempSL.serverIP = packet.getAddress().getHostAddress();
 
+                        boolean existing = false;
+                        for(int i = 0; i<Main.servers.size();i++)
+                            if(Main.servers.get(i).idNum==tempSL.idNum) {
+                                Main.servers.get(i).numClients = tempSL.numClients;
+                                existing = true;
+                                break;
+                            }
+                        if(!existing)
+                        {
+                            Main.servers.add(tempSL);
+                        }
                     }
                     else
                         System.out.println("not sure what happened there we recieved :"+message);

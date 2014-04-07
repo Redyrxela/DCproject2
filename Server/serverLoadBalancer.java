@@ -5,15 +5,14 @@ import java.util.Enumeration;
 
 public class serverLoadBalancer extends Thread
 {
-    DatagramSocket socket;
+    DatagramSocket clientN;
     public void run()
     {
-
-        Main.servers = new ArrayList<serverLoads>();
-
           try {
-                byte[] senddata = "@@@".getBytes();            //prepare valid client data for sending to server
-                DatagramSocket clientN = new DatagramSocket(); //create a new socket
+                String temp = "@@@"+Main.serverID+":"+Main.numClients;
+                byte[] senddata = temp.getBytes();            //prepare valid client data for sending to server
+                System.out.println("blasting out to all servers!");
+                clientN = new DatagramSocket(); //create a new socket
                 clientN.setBroadcast(true);                    //enable broadcasting
 
                 try { //send to the highest order broadcast address
@@ -45,40 +44,12 @@ public class serverLoadBalancer extends Thread
                         }
                     }
                 }
-                byte[] recBuffer = new byte[15000];
-
-                DatagramPacket receivePacket = new DatagramPacket(recBuffer, recBuffer.length);
-                clientN.receive(receivePacket); //receive a response, hopefully its from the server
-
-                String temp = new String(receivePacket.getData()).trim(); //trim extra chars like \n
-                serverLoads tempSL = new serverLoads();
-                if(temp.substring(0, 3).equals("%%%"))//if its a server responding
-                {
-                   String[] parts = temp.substring(3,temp.length()).split(":");
-                   tempSL.idNum = Integer.parseInt(parts[0]);
-                   tempSL.numClients = Integer.parseInt(parts[1]);
-                   tempSL.serverIP = receivePacket.getAddress().getHostAddress();
-
-                   boolean found = false;
-                   for(int i =0; i< Main.servers.size(); ++i)
-                   {
-                       if(Main.servers.get(i).idNum==tempSL.idNum)
-                       {
-                           Main.servers.get(i).numClients = tempSL.numClients;
-                           found = true;
-                           break;
-                       }
-                   }
-                   if(!found)
-                       Main.servers.add(tempSL);
-
-                }
             }
             catch (Exception excep)
             {
                 System.out.println("failed on something major : "+excep);
             }
-
+            clientN.close();
     }
 
 

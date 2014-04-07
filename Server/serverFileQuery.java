@@ -13,6 +13,9 @@ import java.net.ServerSocket;
  * Created by Alex on 3/19/14.
  */      
 public class serverFileQuery extends Thread
+{
+    byte[] sendData;
+    DatagramPacket sendPacket;
     public void run()
     {
         try
@@ -41,8 +44,8 @@ public class serverFileQuery extends Thread
                         if(Main.clientfiles.get(i).fName.equals(message)) //if the message send matches a file name
                         {                                                 //respond with the first host in the list(ip and port)
                             String temp = Main.clientfiles.get(i).hosts.get(0).IPaddress+":"+Main.clientfiles.get(i).hosts.get(0).port;
-                            byte[] sendData = temp.getBytes();
-                            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,packet.getAddress(),packet.getPort());
+                            sendData = temp.getBytes();
+                            sendPacket = new DatagramPacket(sendData, sendData.length,packet.getAddress(),packet.getPort());
                             socket.send(sendPacket);
                             System.out.println("Responded with "+Main.clientfiles.get(i).hosts.get(0).IPaddress+":"+Main.clientfiles.get(i).hosts.get(0).port);
                             found = true;

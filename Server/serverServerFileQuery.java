@@ -1,9 +1,11 @@
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
 //clients could interupt server server communication moved it to its own port (pretty much identical code)
 public class serverServerFileQuery extends Thread {
-    public void run()
-    {
-        try
-        {
+    public void run() {
+        try {
             DatagramSocket socket = new DatagramSocket(4111); //UDP socket to listen on,
             String requestedFile;
             InetAddress clientIP;
@@ -23,15 +25,15 @@ public class serverServerFileQuery extends Thread {
                 requestedFile = message;
 
                 System.out.println("File request received from a server");
-                for(int i = 0; i<Main.clientfiles.size();++i)         //for all of our files on record
+                for (int i = 0; i < Main.clientfiles.size(); ++i)         //for all of our files on record
                 {
-                    if(Main.clientfiles.get(i).fName.equals(message)) //if the message send matches a file name
+                    if (Main.clientfiles.get(i).fName.equals(message)) //if the message send matches a file name
                     {                                                 //respond with the first host in the list(ip and port)
-                        String temp = Main.clientfiles.get(i).hosts.get(0).IPaddress+":"+Main.clientfiles.get(i).hosts.get(0).port;
+                        String temp = Main.clientfiles.get(i).hosts.get(0).IPaddress + ":" + Main.clientfiles.get(i).hosts.get(0).port;
                         byte[] sendData = temp.getBytes();
-                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,packet.getAddress(),packet.getPort());
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, packet.getAddress(), packet.getPort());
                         socket.send(sendPacket);
-                        System.out.println("Responded with "+Main.clientfiles.get(i).hosts.get(0).IPaddress+":"+Main.clientfiles.get(i).hosts.get(0).port);
+                        System.out.println("Responded with " + Main.clientfiles.get(i).hosts.get(0).IPaddress + ":" + Main.clientfiles.get(i).hosts.get(0).port);
                         break;
                     }
                 }
@@ -39,4 +41,8 @@ public class serverServerFileQuery extends Thread {
 
             }
 
+        } catch (Exception excep) {
+            System.out.print(excep);
+        }
+    }
 }
