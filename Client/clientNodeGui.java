@@ -87,14 +87,7 @@ public class clientNodeGui
             retrieveButton.setEnabled(true);
         }
 
-        final clientNodeGui this$0;
-
-        clientReciever()
-        {
-            this$0 = clientNodeGui.this;
-            super();
-        }
-    }
+}
 
 
     private void createUIComponents()
@@ -127,13 +120,7 @@ public class clientNodeGui
                 }
             }
 
-            final clientNodeGui this$0;
 
-            
-            {
-                this$0 = clientNodeGui.this;
-                super();
-            }
         });
         retrieveButton.addActionListener(new ActionListener() {
 
@@ -152,13 +139,7 @@ public class clientNodeGui
                 }
             }
 
-            final clientNodeGui this$0;
 
-            
-            {
-                this$0 = clientNodeGui.this;
-                super();
-            }
         });
         directoryName.addFocusListener(new FocusListener() {
 
@@ -172,13 +153,7 @@ public class clientNodeGui
             {
             }
 
-            final clientNodeGui this$0;
 
-            
-            {
-                this$0 = clientNodeGui.this;
-                super();
-            }
         });
     }
 
