@@ -16,61 +16,66 @@ public class serverFileQuery extends Thread
 {
     byte[] sendData;
     DatagramPacket sendPacket;
+    DatagramPacket packet;
+    byte[] recBuffer;
     public void run()
     {
-        try
-        {
-            DatagramSocket ssFQ = new DatagramSocket(); //create a new socket
+        try {
+            DatagramSocket ssFQ = new DatagramSocket(4112); //create a new socket
             DatagramSocket socket = new DatagramSocket(6666); //UDP socket to listen on,
             String requestedFile;
             InetAddress clientIP;
             int clientPort;
             while (true)   //forever
             {
-                socket.setSoTimeout(10000);
-                System.out.println("Waiting for file request");
-                byte[] recBuffer = new byte[15000];
-                DatagramPacket packet = new DatagramPacket(recBuffer,recBuffer.length);
-                socket.receive(packet);   //read an incoming packet
-                clientIP = packet.getAddress();
-                clientPort = packet.getPort();
-                System.out.println("File request received from "+packet.getAddress().getHostAddress());
-                String message = new String(packet.getData()).trim();
-                requestedFile = message;
+                try {
+                    socket.setSoTimeout(10000);
+                    System.out.println("Waiting for file request");
+                    recBuffer = new byte[15000];
+                    packet = new DatagramPacket(recBuffer, recBuffer.length);
+                    socket.receive(packet);   //read an incoming packet
+                    clientIP = packet.getAddress();
+                    clientPort = packet.getPort();
+                    System.out.println("File request received from " + packet.getAddress().getHostAddress());
+                    String message = new String(packet.getData()).trim();
+                    requestedFile = message;
 
-                    boolean found=false;
-                    for(int i = 0; i<Main.clientfiles.size();++i)         //for all of our files on record
+                    boolean found = false;
+                    for (int i = 0; i < Main.clientfiles.size(); ++i)         //for all of our files on record
                     {
-                        if(Main.clientfiles.get(i).fName.equals(message)) //if the message send matches a file name
+                        if (Main.clientfiles.get(i).fName.equals(message)) //if the message send matches a file name
                         {                                                 //respond with the first host in the list(ip and port)
-                            String temp = Main.clientfiles.get(i).hosts.get(0).IPaddress+":"+Main.clientfiles.get(i).hosts.get(0).port;
+                            String temp = Main.clientfiles.get(i).hosts.get(0).IPaddress + ":" + Main.clientfiles.get(i).hosts.get(0).port;
                             sendData = temp.getBytes();
-                            sendPacket = new DatagramPacket(sendData, sendData.length,packet.getAddress(),packet.getPort());
+                            sendPacket = new DatagramPacket(sendData, sendData.length, packet.getAddress(), packet.getPort());
                             socket.send(sendPacket);
-                            System.out.println("Responded with "+Main.clientfiles.get(i).hosts.get(0).IPaddress+":"+Main.clientfiles.get(i).hosts.get(0).port);
+                            System.out.println("Responded with " + Main.clientfiles.get(i).hosts.get(0).IPaddress + ":" + Main.clientfiles.get(i).hosts.get(0).port);
                             found = true;
                             break;
                         }
                     }
-                    if(!found) //it not listed on this server
+                    if (!found) //it not listed on this server
                     {
-                        for(int i = 0; i<Main.servers.size();++i)//ask all servers
+                        for (int i = 0; i < Main.servers.size(); ++i)//ask all servers
                         {
-                            if (Main.servers.get(i).idNum!=Main.serverID) //ask all servers for the file name
+                            if (Main.servers.get(i).idNum != Main.serverID) //ask all servers for the file name
                             {
                                 sendData = requestedFile.getBytes();
-                                sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(Main.servers.get(i).serverIP),4111);
+                                sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(Main.servers.get(i).serverIP), 4111);
                                 ssFQ.send(sendPacket); //blast it out this port
                             }
                         }
                         ssFQ.receive(packet);   //read an incoming packet i hope its correct i'm not going to check it!
                         message = new String(packet.getData()).trim();
                         sendData = message.getBytes();
-                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientIP,clientPort);
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientIP, clientPort);
                         socket.send(sendPacket);       //forward anything recieved back to the client... it had better be correct
 
                     }
 
+                } catch (Exception e) {
+                    System.out.println("Error in file query thread :" + e);
+                }
             }
         }
         catch(IOException except)
