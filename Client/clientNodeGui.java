@@ -9,8 +9,27 @@ import javax.swing.text.JTextComponent;
 
 public class clientNodeGui
 {
-    class clientReciever
-        implements Runnable
+    private JTextField portInput;
+    public JList fileList;
+    private JButton retrieveButton;
+    private JPanel mainPanel;
+    private JTextField directoryName;
+    private JLabel Directory;
+    private JButton Update;
+    public JList outputWindow;
+    private JProgressBar RBar;
+    public JLabel serverGuiIP;
+    public static String dirName;
+    public static int port;
+    public static ArrayList files;
+    public static ArrayList myFiles;
+    public static String serverAddy;
+    public static boolean clientSend;
+    public static boolean clientSenderExists;
+    DefaultListModel listModel;
+    DefaultListModel myListModel;
+
+    class clientReciever implements Runnable
     {
 
         public void run()
@@ -286,25 +305,7 @@ public class clientNodeGui
         return mainPanel;
     }
 
-    private JTextField portInput;
-    public JList fileList;
-    private JButton retrieveButton;
-    private JPanel mainPanel;
-    private JTextField directoryName;
-    private JLabel Directory;
-    private JButton Update;
-    public JList outputWindow;
-    private JProgressBar RBar;
-    public JLabel serverGuiIP;
-    public static String dirName;
-    public static int port;
-    public static ArrayList files;
-    public static ArrayList myFiles;
-    public static String serverAddy;
-    public static boolean clientSend;
-    public static boolean clientSenderExists;
-    DefaultListModel listModel;
-    DefaultListModel myListModel;
+
 
 
 

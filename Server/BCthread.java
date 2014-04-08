@@ -36,7 +36,7 @@ public class BCthread extends Thread
                 if(message.equals("$$$")) //if the message is a valid signal from a client
                 {
                     int lowestClients =Main.numClients;
-                    int lowestID = 1000000;
+                    int lowestID = Main.serverID;
                     boolean same = false;
                     for(int i = 0; i<Main.servers.size();++i)
                     {    //for all servers
@@ -50,6 +50,10 @@ public class BCthread extends Thread
                             if(Main.servers.get(i).idNum<lowestID)
                             {   //do i have the lowest clients
                                 lowestID = Main.servers.get(i).idNum;
+                            }
+                            if(Main.servers.get(i).numClients<lowestClients)
+                            {
+                                lowestClients = Main.servers.get(i).numClients;
                             }
                         }
                     }

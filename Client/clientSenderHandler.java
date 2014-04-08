@@ -3,6 +3,8 @@ import java.net.ServerSocket;
 
 public class clientSenderHandler extends Thread
 {
+    ServerSocket fs;
+    clientSender fileserver;
 
     public clientSenderHandler()
     {
@@ -48,6 +50,5 @@ public class clientSenderHandler extends Thread
         clientNodeGui.clientSenderExists = false;
     }
 
-    ServerSocket fs;
-    clientSender fileserver;
+
 }

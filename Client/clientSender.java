@@ -3,6 +3,7 @@ import java.net.Socket;
 
 public class clientSender extends Thread
 {
+    private Socket socket;
 
     public clientSender(Socket clientSoc)
     {
@@ -36,5 +37,5 @@ public class clientSender extends Thread
         }
     }
 
-    private Socket socket;
+
 }
