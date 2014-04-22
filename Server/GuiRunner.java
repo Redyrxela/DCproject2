@@ -1,6 +1,11 @@
-/**
- * Created by Alex on 4/6/2014.
- */
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
+/**********************************************************************************************
+ * This is a thread that runs a GUI for observing what the server is doing
+ ***********************************************************************************************/
 
 import javax.swing.*;
 import java.awt.*;

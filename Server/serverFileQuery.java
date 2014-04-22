@@ -1,6 +1,13 @@
-// This class monitors a UDP port and listens for clients requesting files, when it recieves
-// a request it responds with the host clients ip and port number. the thread is spawned from
-// the Main class
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
+/**********************************************************************************************
+ *  This class monitors a UDP port and listens for clients requesting files, when it recieves
+ *  a request it responds with the host clients ip and port number. the thread is spawned from
+ *  the Main class
+ ***********************************************************************************************/
 
 
 import java.io.IOException;
@@ -9,9 +16,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 
-/**
- * Created by Alex on 3/19/14.
- */      
+
 public class serverFileQuery extends Thread
 {
     byte[] sendData;

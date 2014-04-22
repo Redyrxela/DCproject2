@@ -1,9 +1,16 @@
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
 
 import java.io.*;
 import java.net.Socket;
 
 public class client extends Thread
 {
+    protected static boolean serverContinue = true;
+    protected Socket socket;
 
     public client(Socket clientSoc)
     {
@@ -39,7 +46,6 @@ public class client extends Thread
         }
     }
 
-    protected static boolean serverContinue = true;
-    protected Socket socket;
+
 
 }

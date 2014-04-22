@@ -1,9 +1,22 @@
+/**********************************************************************************************
+* Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+*                                           //Daniel Gedge//Corey Jones//
+*   Project 2 Peer2Peer client/server
+***********************************************************************************************/
+/**********************************************************************************************
+ * This file spawns the client side GUI. it also contains a thread that retrieves files from
+ * the other peers.
+ ***********************************************************************************************/
+
 import com.intellij.uiDesigner.core.*;
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.TransducedAccessor_method_Boolean;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Date;
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 
@@ -34,6 +47,10 @@ public class clientNodeGui
 
         public void run()
         {
+            Date date = new Date();
+            long initTime;
+            long endTime;
+            initTime = System.currentTimeMillis( );
             fileList.setEnabled(false);
             System.out.println((new StringBuilder()).append("Requesting ").append(fileList.getSelectedValue().toString()).append(" from the server").toString());
             String hostIP = "";
@@ -67,6 +84,9 @@ public class clientNodeGui
             {
                 System.out.println("failed on something major");
             }
+            endTime = System.currentTimeMillis( );
+            System.out.println("The server took "+(endTime-initTime)+" ms to respond to a file request");
+            initTime = System.currentTimeMillis( );
             try
             {
                 Socket socket = new Socket(InetAddress.getByName(hostIP), hostPort);
@@ -98,13 +118,17 @@ public class clientNodeGui
             {
                 System.out.println((new StringBuilder()).append("file recieving error : ").append(excep).toString());
             }
+            endTime = System.currentTimeMillis( );
+            System.out.println("The cleint took "+(endTime-initTime)+" ms to send the file");
             getFileList();
             RBar.setValue(0);
             RBar.setStringPainted(false);
             fileList.setEnabled(true);
             Update.setEnabled(true);
             retrieveButton.setEnabled(true);
+
         }
+
 
 }
 
@@ -124,6 +148,10 @@ public class clientNodeGui
 
             public void actionPerformed(ActionEvent e)
             {
+                Date date = new Date();
+                long initTime;
+                long endTime;
+                initTime = System.currentTimeMillis( );
                 Update.setEnabled(false);
                 retrieveButton.setEnabled(false);
                 try
@@ -137,6 +165,8 @@ public class clientNodeGui
                 {
                     System.out.println((new StringBuilder()).append("we failed to get file list :").append(excep).toString());
                 }
+                endTime = System.currentTimeMillis( );
+                System.out.println("The Update Thread took "+(endTime-initTime)+" ms to complete");
             }
 
 
@@ -145,6 +175,10 @@ public class clientNodeGui
 
             public void actionPerformed(ActionEvent e)
             {
+                Date date = new Date();
+                long initTime;
+                long endTime;
+                initTime = System.currentTimeMillis( );
                 try
                 {
                     Update.setEnabled(false);
@@ -156,6 +190,8 @@ public class clientNodeGui
                 {
                     System.out.println((new StringBuilder()).append("failed to retrieve file :").append(excep).toString());
                 }
+                endTime = System.currentTimeMillis( );
+                System.out.println("The Recieve file Thread took "+(endTime-initTime)+" ms to complete");
             }
 
 
@@ -166,6 +202,7 @@ public class clientNodeGui
             {
                 if(directoryName.getText().charAt(directoryName.getText().length() - 1) != '/')
                     directoryName.setText((new StringBuilder()).append(directoryName.getText()).append("/").toString());
+                directoryName.setText(directoryName.getText().replace("\\","/"));
             }
 
             public void focusGained(FocusEvent focusevent)

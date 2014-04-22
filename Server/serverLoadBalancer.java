@@ -1,3 +1,12 @@
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
+/**********************************************************************************************
+ * This file file is part of the loadbalancing, it udp broadcasts the servers current load
+ * so other servers can stay up to date
+ ***********************************************************************************************/
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;

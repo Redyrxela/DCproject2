@@ -1,3 +1,12 @@
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
+/**********************************************************************************************
+ * This file opens as the client starts and associates with a server.
+ ***********************************************************************************************/
+
 import java.io.PrintStream;
 import java.net.*;
 import java.util.*;
@@ -11,6 +20,10 @@ public class clientbackend extends Thread
 
     public void run()
     {
+        Date date = new Date();
+        long initTime;
+        long endTime;
+        initTime = System.currentTimeMillis( );
         try
         {
             System.out.println("preparing UDP broadcast");
@@ -71,5 +84,7 @@ public class clientbackend extends Thread
         {
             System.out.println("failed on something major");
         }
+        endTime = System.currentTimeMillis( );
+        System.out.println("Associating with the server took "+(endTime-initTime)+" ms to complete");
     }
 }

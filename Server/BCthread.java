@@ -1,16 +1,20 @@
-// This class is spawned in the Main class, it is a background thread that listens on a UDP
-// port for a broadcast message. when the broadcast is seen it will send a message directly
-// to the sender of the broadcast. this allows the client to find the server without knowing
-// the IP address.
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
+/**********************************************************************************************
+ * This class is spawned in the Main class, it is a background thread that listens on a UDP
+ * port for a broadcast message. when the broadcast is seen it will send a message directly
+ * to the sender of the broadcast. this allows the client to find the server without knowing
+ * the IP address.
+ ***********************************************************************************************/
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-/**
- * Created by redyrxela on 3/14/14.
- */
 public class BCthread extends Thread
 {
     DatagramSocket socket;  //listening socket

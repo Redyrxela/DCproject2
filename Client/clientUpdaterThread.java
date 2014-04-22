@@ -1,3 +1,11 @@
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
+/**********************************************************************************************
+ * This file handles comunicating lists of files between the client and server
+ ***********************************************************************************************/
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;

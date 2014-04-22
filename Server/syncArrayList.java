@@ -1,9 +1,15 @@
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
+/**********************************************************************************************
+ * This is an arraylist type for all of the details that the server keeps track of.
+ * it is synchronized so it can be safely modified from multiple threads
+ ***********************************************************************************************/
 import java.util.AbstractList;
 import java.util.ArrayList;
 
-/**
- * Created by Alex on 4/6/2014.
- */
 public class syncArrayList<e> extends ArrayList
 {
     private ArrayList<e> hiddenList;

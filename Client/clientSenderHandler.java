@@ -1,3 +1,12 @@
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
+/**********************************************************************************************
+ * This file spawns with the client, it is a server lister that responds to file requests
+ ***********************************************************************************************/
+
 import java.io.PrintStream;
 import java.net.ServerSocket;
 

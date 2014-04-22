@@ -1,7 +1,12 @@
-
-// This class is the main server class that controls all server functions. it keeps track of
-// which clients have which files.
-
+/**********************************************************************************************
+ * Distributed computing spring 2014 group 4 //Alex Ryder//Nick Champagne//Hue Moua//
+ *                                           //Daniel Gedge//Corey Jones//
+ *   Project 2 Peer2Peer client/server
+ ***********************************************************************************************/
+/**********************************************************************************************
+ * This class is the main server class that controls all server functions. it keeps track of
+ * which clients have which files.
+ ***********************************************************************************************/
 
 import javax.swing.*;
 import java.net.*;
